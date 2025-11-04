@@ -23,6 +23,10 @@ Modulo EDR_Impl implementa EDR {
 
 ***(todo esto no está escrito bien ni en java ni en el leng de diseño que nos dieron)***
 
+#### **aclaración:** probablemente haya que usar NotaFinal en los heaps. no cambia mucho y hace algunas cosas un poco más directo. aunque se me hace raro porque antes de corregir no es la "nota final"
+
+## Modulos que utilizariamos? Intentando corregir los problemas de complejidad...
+
 ```java
 // podemos utilizar:
 
@@ -30,39 +34,25 @@ Modulo EDR_Impl implementa EDR {
     // String --> es equivalente a un array con chars
     // StringBuffer --> es equivalente a un arreglo redimensionable de chars
 
-class Aula {
-    
-    private int _cantEstudiantes;
-
-    private int _ladoAula;
-
-    private Estudiante[] _estudiantes;
-    
-    // métodos aula ...
-};
-
-class ListaDoblementeEnlazada<T> {    // creo que ni necesitamos que sea doblemente enlazada, veremos. la utilizaríamos como "conjLineal"
-
-    private int _size;
-    private Nodo _prim;
-    private Nodo _ult;
-    private class Nodo {/*...*/}
-
-    // métodos lista ...
-    // handle? casi seguro
-}
 
 class MaxHeap<T> {/*...*/} // puede ser usando array o nodos... veremos cuál conviene. si nos permiten utilizar un ArrayList, vamos con eso de una. casi seguro necesitamos un handle
 
-class MinHeap<T> {/*...*/} // puede ser usando array o nodos... veremos cuál conviene. si nos permiten utilizar un ArrayList, vamos con eso de una casi seguro necesitamos un handle
+class MinHeap<T> {/*...*/} // puede ser usando array o nodos... veremos cuál conviene. si nos permiten utilizar un ArrayList, vamos con eso de una. casi seguro necesitamos un handle
+
+class Aula {
+    
+    private Estudiante[] _estudiantes;
+
+    private int _ladoAula;
+    
+    // métodos aula ...
+};
 
 class Estudiante {
 
     private int _idEstudiante; // cuando ordenamos heaps, o los metemos en conj, necesitamos esta info como ref
 
-    private boolean _entregoExamen;     // nos permite verificar si está en el aula ()
-
-    private int _notaActual;  // nos permite devolver la nota del est en O(1). y cuando nos piden las notas de todos los estudiantes simplemente pasamos por el arreglo de estudiantes y devolvemos en valor en algún tipo de lista. también útil porque consultarDarkWeb requiere saber quienes tienen el peor puntaje hasta el momento
+    private boolean _entregoExamen;     // nos permite verificar si está en el aula o no
 
     private int[] _examen;   // pregunta a rta, o tal vez tendríamos que hacer una clase Examen? tal vez para ver cuántas respondió
 
@@ -71,21 +61,88 @@ class Estudiante {
 
 class EdR {
 
-    private int[] _solCanonica; // es un array que representa un examen (preg->rta)
 
-    private Aula _aula;   // acá obtenemos la info de los estudiantes en la pos del alumnos, cuantos hay y las dimensiones del aula. casi todo es O(1) porque usamos arrays.
+    private int[] _solCanonica;
 
-    // tal vez alguna estructura para guardar los handles de cada estudiante.. opciones:
-        // datos de aula en edr y guardamos una estructura que contenga infoEstudiante, y otra los handles a sus rtas en las otras estructuras
-        // aula tiene los datos y los alumnos. y edr se guarda las relaciones entre los alumnos y las estructuras
+    private Aula _aula;
 
-    private MaxHeap<tuple<int, ConjLineal<Estudiante>>>[] _rtasMasPopularesAPregunta; // para cada posición del array, nos devuelve un maxHeap ordenado por las rtas mas populares a c/ preg, y para cada respuesta hay un conjunto de estudiantes que respondieron eso. (probablemente tengamos que guardar el id, igualmente acceder a la info del estudiante es en O(1) )
+    private MaxHeap<Estudiante> _rankingMejoresEstudiantes; //ordenado por nota
 
-    private MinHeap<int, Estudiante> _rankingPeoresEstudiantes;    // útil para cuando tengamos que usar consultarDarkWeb
+    private MinHeap<Estudiante> _rankingPeoresEstudiantes; //ordenado por nota
 
-    private MaxHeap<int, Estudiante> _rankingMejoresEstudiantes;    // No se dónde pero parece que nos van a dar una mini clase NotaFinal que tiene atrib nota e id de estudiante. con esto vamos a poder devolver los estudiantes no copiones al corregir
+    private boolean[] _sospechososDeCopia;
 
-    private boolean[] sospechosoDeCopia;        // para cada posición, nos dice si se cree que se copió. lo utilizamos para el método corregir
+    private HandlesEstudiante[] _posicionesEnLosRankings;
+
+    // propuesta joaquin:
+    
+    private class HandlesEstudiante {
+        private MaxHeap<Estudiante>.Handle refRankingMejores;
+        private MinHeap<Estudiante>.Handle refRankingPeores;
+    }
+
+    // Propuesta Nico:
+
+    private InfoEstudiante[] _estudiantes;
+
+    private class InfoEstudiante {
+        public nota;
+        public examen;
+        public id;
+        public estáONo;
+
+        public InfoEstudiante(nota, examen, id, estáONo) {...}
+    }
+
+    //==========================================
+
+
+    //hay que actualizar los métodos porque están con las estructuras anteriores y antes también estaban incompletos
+
+    public EdR(int ladoAula, int cantEst, AlgunTipoDeSecuencia<int> examenCanonico){/*...*/}
+
+    public void copiarse(int idEstudiante) {/*...*/}
+
+    public void resolver(int idEstudiante, int nroEjercicio, int respuestaEjercicio) {/*...*/}
+
+    public void consultarDarkWeb(int k, AlgunTipoDeSecuencia<int> examenDW) {/*...*/}
+
+    public AlgunTipoDeSecuencia<int> notas() {/*...*/}
+
+    public void entregar(int idEstudiante) {/*...*/}
+
+    public AlgunTipoDeSecuencia<int> chequearCopias() {     // O(E * R)
+        
+        ArrayList<ArrayList<int>> contadorDeRtaPorPregunta = new ArrayList<ArrayList<ArrayList<int>>>();    // O(1)
+
+        for (int i = 0; i < E; i++) {   // O(E)
+
+            // creamos un array/vector con 10 posiciones.. O(1)
+            ArrayList<int> se llama rtas;
+            for (int j = 0; j < R; j++) {  // O(R)
+                Estudiante est = _estudiantes[i];
+                int rta_a_preg_j = est.examen[j];
+                rtas[ rta_a_preg_j ]++;
+            }
+        }           // en total: O(E * R)
+
+        // ahora tenemos R vectorcitos con la cant de veces que se respondió la preg_j con cada rta
+
+        for (int i = 0; i < E; i++) {   // O(E)
+            Estudiante est = _estudiantes[i];
+            // contadorDeRtaPorPregunta[ est.examen[i] ] tiene la cantidad de gente que respondió lo mismo que él
+            // si la cantidad equivale al 25% o más de los estudiantes, lo marcamos en _sosprechosoDeCopia[nroEst] = true;
+        }
+        AlgunTipoDeSecuencia<NotaFinal> res;
+        
+        // recorremos sospechososDeCopia
+        // agregamos al estudiante a la secuencia
+    }
+
+    public AlgunTipoDeSecuencia<NotaFinal> corregir(){/*...*/}
+
+
+    // ============================== encaminando la implementación ==============================
 
     public EdR(int ladoAula, int cantEst, AlgunTipoDeSecuencia<int> examenCanonico){  // el examen probablemente nos lo den en otro formato, pero no cambia
         
@@ -213,97 +270,6 @@ class EdR {
 }
 ```
 
-#### **aclaración:** probablemente haya que usar NotaFinal en los heaps. no cambia mucho y hace algunas cosas un poco más directo. aunque se me hace raro porque antes de corregir no es la "nota final"
-
-## Modulos que utilizariamos? Intentando corregir los problemas de complejidad...
-
-```java
-// podemos utilizar:
-
-    // ArrayList --> es un arreglo redimensionable con O(1) amortizado
-    // String --> es equivalente a un array con chars
-    // StringBuffer --> es equivalente a un arreglo redimensionable de chars
-
-class Aula {
-    
-    private int _cantEstudiantes;
-
-    private int _ladoAula;
-
-    private Estudiante[] _estudiantes;
-    
-    // métodos aula ...
-};
-
-class ListaDoblementeEnlazada<T> {    // creo que ni necesitamos que sea doblemente enlazada, veremos. la utilizaríamos como "conjLineal"
-
-    private int _size;
-    private Nodo _prim;
-    private Nodo _ult;
-    private class Nodo {/*...*/}
-
-    // métodos lista ...
-    // handle? casi seguro
-}
-
-class MaxHeap<T> {/*...*/} // puede ser usando array o nodos... veremos cuál conviene. si nos permiten utilizar un ArrayList, vamos con eso de una. casi seguro necesitamos un handle
-
-class MinHeap<T> {/*...*/} // puede ser usando array o nodos... veremos cuál conviene. si nos permiten utilizar un ArrayList, vamos con eso de una casi seguro necesitamos un handle
-
-class Estudiante {
-
-    private int _idEstudiante; // cuando ordenamos heaps, o los metemos en conj, necesitamos esta info como ref
-
-    private boolean _entregoExamen;     // nos permite verificar si está en el aula ()
-
-    private int _notaActual;  // nos permite devolver la nota del est en O(1). y cuando nos piden las notas de todos los estudiantes simplemente pasamos por el arreglo de estudiantes y devolvemos en valor en algún tipo de lista. también útil porque consultarDarkWeb requiere saber quienes tienen el peor puntaje hasta el momento
-
-    private int[] _examen;   // pregunta a rta, o tal vez tendríamos que hacer una clase Examen? tal vez para ver cuántas respondió
-
-    // métodos estudiante ...
-}
-
-class EdR {
-
-    private int[] _solCanonica;
-
-    private Aula _aula;
-
-    private MinHeap<Estudiante> _rankingPeoresEstudiantes;  //ordenado por nota
-
-    private MaxHeap<Estudiante> _rankingMejoresEstudiantes; //ordenado por nota
-
-    private boolean[] sospechosoDeCopia;
-
-    private int[] cantDeVecesQueRespondieron;
-
-    // opciones:
-
-    // private diccAVL<rta, cantQueResp>[] pregACantDeVecesDeRta; (último recurso)
-
-    // private 
-
-    //==========================================
-
-    public EdR(int ladoAula, int cantEst, AlgunTipoDeSecuencia<int> examenCanonico){/*...*/}
-
-    public void copiarse(int idEstudiante) {/*...*/}
-
-    public void resolver(int idEstudiante, int nroEjercicio, int respuestaEjercicio) {/*...*/}
-
-    public void consultarDarkWeb(int k, AlgunTipoDeSecuencia<int> examenDW) {/*...*/}
-
-    public AlgunTipoDeSecuencia<int> notas() {/*...*/}
-
-    public void entregar(int idEstudiante) {/*...*/}
-
-    public AlgunTipoDeSecuencia<int> chequearCopias() {/*...*/}
-
-    public AlgunTipoDeSecuencia<NotaFinal> corregir(){/*...*/}
-
-}
-```
-
 ---
 
 ## Notas a tener en cuenta para el estudiante:
@@ -352,95 +318,3 @@ Entonces si un ejercicio me pide tener complejidad O(R+log(E)) entonces en reali
     }
 ```
 }
-
-
-
-
-
----
-## Notas Joaquín desactualizadas pero las dejo porlas
-
-
----
-- var solCanónica : **Exámen**
-
----
-- var entregó? : **diccArray < Bool >**
-
-    ---
-
-    **(internamente)**
-
-    | est0 | ... | est_{E-1} |
-    | :---: | :---: | :---: |
-    |bool|bool|bool|
----
-- var estAExamen : **diccArray < est, Examen >**
-    , donde Examen es **diccArray < preg, int >**
-
-    ---
-
-    **(internamente)**
-
-    | est<sub>0</sub> | ... | est<sub>E-1</sub> |
-    | :---: | :---: | :---: |
-    |examen<sub>0</sub>|...|examen<sub>E-1</sub>|
-
-    - y el Examen:
-    
-        ---
-
-        **(internamente)**
-
-        | preg<sub>0</sub> | ... | preg<sub>R-1</sub> |
-        | :---: | :---: | :---: |
-        |rta<sub>0</sub>|...|rta<sub>R-1</sub>|
-
-
----
-- var notas : **diccArray < est, int >**
-
-    ---
-
-    **(internamente)**
-
-    | est<sub>0</sub> | ... | est<sub>E-1</sub> |
-    | :---: | :---: | :---: |
-    |nota_final<sub>0</sub>|...|nota_final<sub>E-1</sub>|
-
----
-- var cantQueEntregaron : int
-
----
-- var examenARtas : diccArray < preg, maxHeap < int, Rta > >
-
-    ---
-
-    **(internamente)**
-
-    - preg<sub>0</sub> :
-    
-    (adentro de un maxHeap)
-
-    |cantidadQueRespondieron|conjAlumnos|
-    |:---:|:---:|
-    |a|conj con s estudiantes|
-    |b|conj con t estudiantes|
-    |c|conj con u estudiantes|
-    |d|conj con v estudiantes|
-    |...|...|
-
-    - preg<sub>1</sub> :
-    
-    (adentro de un maxHeap)
-
-    |cantidadQueRespondieron|conjAlumnos|
-    |:---:|:---:|
-    |a|conj con s estudiantes|
-    |b|conj con t estudiantes|
-    |c|conj con u estudiantes|
-    |d|conj con v estudiantes|
-    |...|...|
-
-    ...
-
