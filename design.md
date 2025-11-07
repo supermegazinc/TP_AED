@@ -14,7 +14,6 @@
     // String --> es equivalente a un array con chars
     // StringBuffer --> es equivalente a un arreglo redimensionable de chars
 
-
 class MaxHeap<T> {/*...*/} // puede ser usando array o nodos... veremos cuál conviene. si nos permiten utilizar un ArrayList, vamos con eso de una. casi seguro necesitamos un handle
 
 class MinHeap<T> {/*...*/} // puede ser usando array o nodos... veremos cuál conviene. si nos permiten utilizar un ArrayList, vamos con eso de una. casi seguro necesitamos un handle
@@ -54,12 +53,18 @@ class EdR {
 
     private HandlesEstudiante[] _posicionesEnLosRankings;
 
+    // =========================================
+    
     // propuesta joaquin:
+    
+    private int[] _notasEstudiantes;
     
     private class HandlesEstudiante {
         private MaxHeap<Estudiante>.Handle refRankingMejores;
         private MinHeap<Estudiante>.Handle refRankingPeores;
     }
+
+    // =========================================
 
     // Propuesta Nico:
 
